@@ -6,19 +6,25 @@ from tensorflow.contrib.tensorboard.plugins import projector
 DEFAULT_STDDEV = 0.1
 DEFAULT_BIAS = 0.1
 
+TRUNC_NORM_INIT = tf.truncated_normal
+CONST_INIT = tf.constant
 
-def call_initializer(initializer, params):
+
+def call_initializer(initializer, shape, params):
     """
     Maps parameters to initializer
     :type initializer: tf.Initializer
+    :type shape: list
     :type params: dict
     :return:
     """
-    if initializer == tf.truncated_normal_initializer:
+    if initializer == TRUNC_NORM_INIT:
         params.setdefault("stddev", DEFAULT_STDDEV)
-    elif initializer == tf.constant_initializer:
+    elif initializer == tf.constant:
         params.setdefault("value", DEFAULT_BIAS)
 
+    # Remove is get_var scope works
+    params.setdefault("shape", shape)
     return initializer(**params)
 
 
@@ -48,7 +54,7 @@ def variable_summaries(var, histogram_name='histogram'):
     ])
 
 
-def summary_variable(name, shape, initializer=tf.truncated_normal_initializer, enable_summary=True, **kwargs):
+def summary_variable(name, shape, initializer=TRUNC_NORM_INIT, enable_summary=True, **kwargs):
     """
     Create a weight matrix with appropriate initialization.
     :type name: basestring
@@ -57,11 +63,14 @@ def summary_variable(name, shape, initializer=tf.truncated_normal_initializer, e
     :type enable_summary: bool
     :rtype: tf.Variable
     """
-    variable = tf.get_variable(
-        name,
-        shape=shape,
-        initializer=call_initializer(initializer, kwargs)
-    )
+    # Requires dynamic scope names
+    # variable = tf.get_variable(
+    #     name,
+    #     shape=shape,
+    #     initializer=call_initializer(initializer, kwargs)
+    # )
+    init = call_initializer(initializer, shape, kwargs)
+    variable = tf.Variable(init, name=name)
 
     with tf.name_scope(name):
         if enable_summary:
@@ -70,11 +79,11 @@ def summary_variable(name, shape, initializer=tf.truncated_normal_initializer, e
     return variable
 
 
-def weight_variable(shape, initializer=tf.truncated_normal_initializer, enable_summary=True, **kwargs):
+def weight_variable(shape, initializer=TRUNC_NORM_INIT, enable_summary=True, **kwargs):
     """
     Create a weight matrix with appropriate initialization.
     :type shape: list <float>
-    :type initializer: tf.Initializer
+    :type initializer: func
     :type enable_summary: bool
     :rtype: tf.Variable
     """
@@ -83,7 +92,7 @@ def weight_variable(shape, initializer=tf.truncated_normal_initializer, enable_s
     )
 
 
-def bias_variable(shape, initializer=tf.constant_initializer, enable_summary=True, **kwargs):
+def bias_variable(shape, initializer=CONST_INIT, enable_summary=True, **kwargs):
     """
     Create a bias variable with appropriate initialization.
     :type shape: list <float>

@@ -3,22 +3,27 @@ import tensorflow as tf
 from .tensor_functions import bias_variable, weight_variable
 
 
-def get_ann_layer(layer, shape, keep_prob=None, activate=True, enable_summary=True):
+def get_ann_layer(layer, node_size, keep_prob=None, activate=True, enable_summary=True):
     """
     Artificial Neural Network Layer
     Example: get_artificial_layer(input_x, filters[i] + channels[i:i + 2])
+    :param hidden_size: Dimension for layer
+    :param activate: For running activation function
+    :param enable_summary: For tensorboard
+
     :type layer: tf.Placeholder
-    :type shape: list: shape for weight and the bias. Last element will be used to build bias.
+    :type hidden_size: int
     :type keep_prob: tf.Placeholder
-    :type activate: bool: Run activation function
-    :type enable_summary: bool: For tensorboard
-    :return:
+    :type activate: bool
+    :type enable_summary: bool
+    :rtype: tf.Tensor
     """
-    with tf.name_scope('Layer'):
-        weights = weight_variable(shape)
-        biases = bias_variable(shape[-1:])
+    with tf.name_scope('ANN_Layer'):
+        weights = weight_variable([int(layer.shape[-1]), node_size])
+        biases = bias_variable([node_size])
 
         with tf.name_scope('Wx_plus_b'):
+            # Pre-Activation
             preactivate = tf.nn.xw_plus_b(layer, weights, biases)
             if enable_summary:
                 tf.summary.histogram('Pre_Activations', preactivate)
@@ -34,8 +39,6 @@ def get_ann_layer(layer, shape, keep_prob=None, activate=True, enable_summary=Tr
 
             # Dropout
             return tf.nn.dropout(activations, keep_prob, name="Dropout")
-
-
 
 
 def get_convolution_layer(layer, shape, strides=1, enable_summary=True):
