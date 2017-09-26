@@ -60,9 +60,11 @@ def get_convolution_layer(layer, shape, strides=1, enable_summary=True):
                 padding='SAME'
             )
             preactivate = conv_layer + biases
-            tf.summary.histogram('Pre_Activations', preactivate)
+            if enable_summary:
+                tf.summary.histogram('Pre_Activations', preactivate)
             activations = tf.nn.relu(preactivate)
-            tf.summary.histogram('Activations', activations)
+            if enable_summary:
+                tf.summary.histogram('Activations', activations)
             return activations
 
 
@@ -124,7 +126,8 @@ def get_recurrent_layer(layer, hidden_layer_size, keep_prob=1.0):
     tf.summary.histogram('RNN_State', state)
     return outputs, state
 
-def get_rnn_multi_layer(layer, hidden_layer_size, vocabulary_size, embedding_dimension, num_layers=2):
+
+def get_rnn_multi_layer(layer, hidden_layer_size, _seqlens, vocabulary_size, embedding_dimension, num_layers=2):
     with tf.name_scope("Embeddings"):
         embeddings = tf.Variable(tf.random_uniform([vocabulary_size, embedding_dimension], -1.0, 1.0), name='embedding')
         embed = tf.nn.embedding_lookup(embeddings, layer)

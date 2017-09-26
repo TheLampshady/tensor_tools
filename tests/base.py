@@ -12,8 +12,8 @@ class TestBase(tf.test.TestCase):
 
     def setUp(self):
         tf.reset_default_graph()
-        if not os.path.exists(TEST_DATA_DIR):
-            os.makedirs(TEST_DATA_DIR)
+        shutil.rmtree(TEST_DATA_DIR, ignore_errors=True)
+        os.makedirs(TEST_DATA_DIR)
         super(TestBase, self).setUp()
 
     def tearDown(self):
